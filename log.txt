@@ -1,0 +1,6 @@
+Packet 1 from A to C at cycle 1
+Packet 2 from B to D at cycle 2
+Packet 4 from A to B at cycle 4
+Packet 5 from C to D at cycle 5
+Packet 3 from B to C at cycle 6
+Packet 6 from A to C at cycle 10
