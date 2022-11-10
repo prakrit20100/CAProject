@@ -1,13 +1,11 @@
 import numpy as np
 import csv
 
-
-#will get 5000rs
 log=open("log.txt","w")
 
 class Router:
     def __init__(self):
-        '''self.portN = None
+        self.portN = None
         self.portW = None
         self.portE = None
         self.portS = None
@@ -17,10 +15,8 @@ class Router:
         self.crossbar = None
         self.carryingData = False
         
-
-        '''
         self.buffer = [] # max size is 5
-    ''''
+
     def assignNorthRouter(self, nr):
         self.portN.assignConnection(self,nr)
 
@@ -35,18 +31,16 @@ class Router:
 
     def assignLocalPE(self,Pe):
         self.pe = Pe
-    '''
 
 class Flit:
-    def __init__(self,bit,cnt,d,s):
+    def __init__(self,bit,cnt,d,s,n):
         self.bits=bit
         self.src=s
         self.count=cnt
         self.dest=d
+        self.number=n
 
-    
-
-'''class PE:
+class PE:
     def __init__(self):
         self.router = None
         self.flits_storage=[]
@@ -67,18 +61,18 @@ class Crossbar:
 
     def assignRouter(self, r):
         self.router = r
-'''
 
-'''class Port:
+
+class Port:
     def __init__(self):
         self.x = None
         self.y = None
     def assignConnection(self, X, Y):
         self.x = X
         self.y = Y
-    '''
 
-'''class Mesh:
+
+class Mesh:
     def __init__(self):
         self.A = Router()
         self.B = Router()
@@ -92,7 +86,7 @@ class Crossbar:
         self.C.assignWestRouter(self.D)
         self.D.assignNorthRouter(self.A)
         self.D.assignEastRouter(self.C)
-    '''
+
 
 
 def read_file(file):
@@ -100,37 +94,27 @@ def read_file(file):
     Lines = file1.readlines()
     arr=[]
     for line in Lines:
-
-        
         temp=[]
         for word in line.split():
             temp.append(word)
-
         arr.append(temp)
-
-
     return arr
-            
-
-   
-
-
-
-    
+  
 def transferPackets(traffic_file):
     in_arr=read_file(traffic_file)
     
     cycle_max=int(in_arr[len(in_arr)-1][0])
+    # cycle_max=100
     i=0
     counter=0
-    print(cycle_max)
+    # print(cycle_max)
     while cycle_max>0 or len(A.buffer)>0 or len(B.buffer)>0 or len(C.buffer)>0 or len(D.buffer)>0:
         # if cycle_max>0:
-        #print(cycle_max,len(A.buffer),len(B.buffer),len(C.buffer),len(D.buffer))
+        print(cycle_max,len(A.buffer),len(B.buffer),len(C.buffer),len(D.buffer))
         if cycle_max>0:
             counter+=1
             row=in_arr[i]
-            print(row)
+            # print(row)
             src=row[1]
             # print(src)
             dest=row[2]
@@ -138,32 +122,32 @@ def transferPackets(traffic_file):
             packet=row[3]
             # print(packet)
 
-            f1=Flit(packet[:32],counter,dest,src)
-            f2=Flit(packet[32:64],-1,dest,src)
-            f3=Flit(packet[64:96],-1,dest,src)
+            f1=Flit(packet[:32],counter,dest,src,1)
+            f2=Flit(packet[32:64],counter,dest,src,2)
+            f3=Flit(packet[64:96],counter,dest,src,3)
 
             if src=="A":
-                print("`paclket at A",counter)
+                # print("Packet at A ",counter)
                 A.buffer.append(f1)
                 A.buffer.append(f2)
                 A.buffer.append(f3)
                 
 
             elif src=="B":
-                print("`paclket at b",counter)
+                # print("Packet at b ",counter)
                 B.buffer.append(f1)
                 B.buffer.append(f2)
                 B.buffer.append(f3)
             
 
             elif src=="C":
-                print("`paclket at c",counter)
+                # print("Packet at c ",counter)
                 C.buffer.append(f1)
                 C.buffer.append(f2)
                 C.buffer.append(f3)
 
             elif src=="D":
-                print("`paclket at d",counter)
+                # print("Packet at d ",counter)
                 D.buffer.append(f1)
                 D.buffer.append(f2)
                 D.buffer.append(f3)
@@ -171,115 +155,167 @@ def transferPackets(traffic_file):
         #transfering flits
         #A
         if len(A.buffer)>0:
-            print("leaving from a",counter)
+            # print("leaving from a ",counter)
             
             flit=A.buffer[0]
             
 
             if flit.dest=="B":
-                print("going to b",counter)
-                if flit.count!=-1:
-                    log.write("Packet "+str(flit.count)+" from "+ flit.src+ " to "+ flit.dest +" at cycle "+str(i+1)+"\n")
-                
+                # print("going to b ",counter)
+                log.write("Packet "+str(flit.count)+" flit "+str(flit.number)+" from A to B at cycle "+str(i+1)+"\n")
                 A.buffer.pop(0)
+                cycle_max-=1
+                i+=1
+                continue
 
             if flit.dest=="D":
-                print("going to d",counter)
-                if flit.count!=-1:
-                    log.write("Packet "+str(flit.count)+" from "+ flit.src+ " to "+ flit.dest +" at cycle "+str(i+1)+"\n")
-                
+                # print("going to d ",counter)
+                log.write("Packet "+str(flit.count)+" flit "+str(flit.number)+" from A to D at cycle "+str(i+1)+"\n")
                 A.buffer.pop(0)
+                cycle_max-=1
+                i+=1
+                continue
 
             if flit.dest=="C":
-
-                print("going to c",counter)
-                B.buffer.append(flit)
-                A.buffer.pop(0)
+                if(len(B.buffer)==5):
+                    # print("going to d ",counter)
+                    D.buffer.append(flit)
+                    A.buffer.pop(0)
+                    log.write("Packet "+str(flit.count)+" flit "+str(flit.number)+" from A to D at cycle "+str(i+1)+"\n")
+                    cycle_max-=1
+                    i+=1
+                    continue
+                else:
+                    # print("going to b ",counter)
+                    B.buffer.append(flit)
+                    A.buffer.pop(0)
+                    log.write("Packet "+str(flit.count)+" flit "+str(flit.number)+" from A to B at cycle "+str(i+1)+"\n")
+                    cycle_max-=1
+                    i+=1
+                    continue
 
 
 
         if len(B.buffer)>0:
-            print("leaving from b",counter)
-            
+            # print("leaving from b ",counter)
             flit=B.buffer[0]
-            
-
             if flit.dest=="A":
-                print("going to a",counter)
-                if flit.count!=-1:
-                    log.write("Packet "+str(flit.count)+" from "+ flit.src+ " to "+ flit.dest +" at cycle "+str(i+1)+"\n")
-                
+                # print("going to a ",counter)
+                log.write("Packet "+str(flit.count)+" flit "+str(flit.number)+" from B to A at cycle "+str(i+1)+"\n")    
                 B.buffer.pop(0)
+                cycle_max-=1
+                i+=1
+                continue 
 
             if flit.dest=="C":
                 
-                print("going to c",counter)
-                if flit.count!=-1:
-                    log.write("Packet "+str(flit.count)+" from "+ flit.src+ " to "+ flit.dest +" at cycle "+str(i+1)+"\n")
-                
+                # print("going to c ",counter)
+                log.write("Packet "+str(flit.count)+" flit "+str(flit.number)+" from B to C at cycle "+str(i+1)+"\n")
                 B.buffer.pop(0)
+                cycle_max-=1
+                i+=1
+                continue
 
             if flit.dest=="D":
-                print("going to d",counter)
-                C.buffer.append(flit)
-                B.buffer.pop(0)
+                if(len(A.buffer)==5):
+                    # print("going to c ",counter)
+                    C.buffer.append(flit)
+                    B.buffer.pop(0)
+                    log.write("Packet "+str(flit.count)+" flit "+str(flit.number)+" from B to C at cycle "+str(i+1)+"\n")
+                    cycle_max-=1
+                    i+=1
+                    continue
+                else:
+                    # print("going to a ",counter)
+                    A.buffer.append(flit)
+                    B.buffer.pop(0)
+                    log.write("Packet "+str(flit.count)+" flit "+str(flit.number)+" from B to A at cycle "+str(i+1)+"\n")
+                    cycle_max-=1
+                    i+=1
+                    continue
 
 
         if len(C.buffer)>0:
-            print("leaving from c",counter)
-            
+            # print("leaving from c ",counter) 
             flit=C.buffer[0]
-            
-
             if flit.dest=="B":
-                print("going to b",counter)
-                if flit.count!=-1:
-                    log.write("Packet "+str(flit.count)+" from "+ flit.src+ " to "+ flit.dest +" at cycle "+str(i+1)+"\n")
-                
+                # print("going to b ",counter)
+                log.write("Packet "+str(flit.count)+" flit "+str(flit.number)+" from C to B at cycle "+str(i+1)+"\n")
                 C.buffer.pop(0)
+                cycle_max-=1
+                i+=1
+                continue
 
             if flit.dest=="D":
-                print("going to d",counter)
-                if flit.count!=-1:
-                    log.write("Packet "+str(flit.count)+" from "+ flit.src+ " to "+ flit.dest +" at cycle "+str(i+1)+"\n")
-                
+                # print("going to d ",counter)
+                log.write("Packet "+str(flit.count)+" flit "+str(flit.number)+" from C to D at cycle "+str(i+1)+"\n")
                 C.buffer.pop(0)
+                cycle_max-=1
+                i+=1
+                continue
 
             if flit.dest=="A":
-                print("going to a",counter)
-                D.buffer.append(flit)
-                C.buffer.pop(0)
-
+                if(len(D.buffer)==5):
+                    # print("going to b ",counter)
+                    B.buffer.append(flit)
+                    C.buffer.pop(0)
+                    log.write("Packet "+str(flit.count)+" flit "+str(flit.number)+" from C to B at cycle "+str(i+1)+"\n")
+                    cycle_max-=1
+                    i+=1
+                    continue
+                else:
+                    # print("going to d ",counter)
+                    D.buffer.append(flit)
+                    C.buffer.pop(0)
+                    log.write("Packet "+str(flit.count)+" flit "+str(flit.number)+" from C to D at cycle "+str(i+1)+"\n")
+                    cycle_max-=1
+                    i+=1
+                    continue
 
         if len(D.buffer)>0:
-            print("leaving from d")
+            # print("leaving from d ")
             flit=D.buffer[0]
             #print(flit.dest)
 
             if flit.dest=="C":
-                print("going to c",counter)
-                if flit.count!=-1:
-                    log.write("Packet "+str(flit.count)+" from "+ flit.src+ " to "+ flit.dest +" at cycle "+str(i+1)+"\n")
-               
+                # print("going to c ",counter)
+                log.write("Packet "+str(flit.count)+" flit "+str(flit.number)+" from D to C at cycle "+str(i+1)+"\n")
                 D.buffer.pop(0)
+                cycle_max-=1
+                i+=1
+                continue
 
 
             if flit.dest=="A":
-                print("going to a",counter)
-                if flit.count!=-1:
-                    log.write("Packet "+str(flit.count)+" from "+ flit.src+ " to "+ flit.dest +" at cycle "+str(i+1)+"\n")
-                
+                # print("going to a ",counter)
+                log.write("Packet "+str(flit.count)+" flit "+str(flit.number)+" from D to A at cycle "+str(i+1)+"\n") 
                 D.buffer.pop(0)
+                cycle_max-=1
+                i+=1
+                continue
 
 
             if flit.dest=="B":
-                print("going to b",counter)
-                A.buffer.append(flit)
-                D.buffer.pop(0)
+                if(len(C.buffer)==5):
+                    # print("going to a ",counter)
+                    A.buffer.append(flit)
+                    D.buffer.pop(0)
+                    log.write("Packet "+str(flit.count)+" flit "+str(flit.number)+" from D to A at cycle "+str(i+1)+"\n")
+                    cycle_max-=1
+                    i+=1
+                    continue
+                else:
+                    # print("going to c ",counter)
+                    C.buffer.append(flit)
+                    D.buffer.pop(0)
+                    log.write("Packet "+str(flit.count)+" flit "+str(flit.number)+" from D to C at cycle "+str(i+1)+"\n")
+                    cycle_max-=1
+                    i+=1
+                    continue
 
 
-        cycle_max-=1
-        i+=1
+        # cycle_max-=1
+        # i+=1
 
 
 
