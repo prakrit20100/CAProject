@@ -47,4 +47,4 @@ Out of which all have been completed.
 * Shashank Singh - 2020120
 * Prakrit Garg - 2020100
 * Divyansh Bhagat - 2020059
-* Mihir Bhatia - 20190060
+* Mihir Bhatia - 2019060
